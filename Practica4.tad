@@ -1,0 +1,64 @@
+------------1)
+tad List (a : Set) where
+    import Bool
+    nil : List a
+    cons : a -> List a -> List a
+    null : List a -> Bool
+    head : List a -> a
+    tail : List a -> List a
+null nil = True
+null (cons x l) = False
+head (poner x l) = x
+tail (poner x l) = l
+
+nil = <>
+cons x <x1,..,xn> = <x,x1,..,xn>
+null nil = True
+null <x1,..,xn> = False si n ->= 0
+head <x1,x2,..,xn> = x1
+tail <x1,x2,..,xn> = <x2,..,xn>
+
+inL: List A -> A -> Bool
+
+inL nil x = False
+inL (cons x xs) y = if x == y then True else inL xs y
+
+delete nil x = nil
+delete (cons x xs) y = if x == y then delete xs y
+                                 else cons x (delete xs y)
+
+-----------2)
+tad Pila (a : Set) where
+    import Bool
+    empty : Pila a
+    push : a -> Pila a -> Pila a
+    isEmpty : Pila a -> Bool
+    top : Pila a -> a
+    pop : Pila a -> Pila a
+
+isEmpty empty = True
+isEmpty (push x xs) = False
+top (push x xs) = x
+pop (push x xs) = xs
+
+empty = <>
+push x <x1,..,xn> = <x,x1,..,xn>
+isEmpty empty = True
+isEmpty <x1,..,xn> = False
+top <x1,x2,..,xn> = x1
+pop <x1,x2,..,xn> = <x2,..,xn>
+
+-----------3)
+tad Conjunto (A : Set) where
+    import Bool
+    vacio : Conjunto A
+    insertar : A -> Conjunto A -> Conjunto A
+    borrar : A -> Conjunto A -> Conjunto A
+    esVacio : Conjunto A -> Bool
+    union : Conjunto A -> Conjunto A -> Conjunto A
+    interseccion : Conjunto A -> Conjunto A -> Conjunto A
+    resta : Conjunto A -> Conjunto A -> Conjunto A
+
+insertar x (insertar x c) = insertar x c
+insertar x (insertar y c) = insertar y (insertar x c)
+
