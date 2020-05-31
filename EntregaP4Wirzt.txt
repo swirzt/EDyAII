@@ -1,0 +1,142 @@
+Ejercicio 4)
+
+tad PQueue (A : Set, B : Ordered Set) where
+    import Bool
+    vacia : PQueue A B
+    poner : PQueue A B -> A -> B -> PQueue A B
+    primero : PQueue A B -> A
+    sacar : PQueue A B -> PQueue A B
+    esVacia : PQueue A B -> Bool
+    union : PQueue A B -> PQueue A B -> PQueue A B
+
+- Especificación Algebráica
+-- No existen elementos distintos con la misma prioridad
+poner x1 y (poner x2 y PQ) = poner x1 y PQ
+primero (poner x y vacia) = x
+primero (poner x1 y1 (poner x2 y2 PQ)) = if y1 > y2 then primero (poner x1 y1 PQ)
+                                                    else primero (poner x2 y2 PQ)
+sacar (poner x y vacia) = vacia
+sacar (poner x1 y1 (poner x2 y2 PQ)) = if y1 > y2 then poner x2 y2 (sacar (poner x1 y1 PQ))
+                                                  else poner x1 y1 (sacar (poner x2 y2 PQ))
+esVacia vacia = True
+esVacia (poner x y PQ) = False
+union vacia q2 = q2
+union (poner x y q1) q2 = poner x y (union q1 q2)
+
+- Especificación por conjuntos
+vacia = {}
+poner x y {(x1,y1),(x2,y2),...,(xn,yn)} = {(x,y),(x1,y1),(x2,y2),...,(xn,yn)}
+primero {(x,y)} = x
+primero {(x1,y1),(x2,y2),...,(xn,yn)} = if y1 > y2 then primero {(x1,y1),(x3,y3),...,(xn,yn)}
+                                                   else primero {(x2,y2),...,(xn,yn)}
+sacar {(x,y)} = {}
+sacar {(x1,y1),(x2,y2),...,(xn,yn)} = if y1 > y2 then {(x2,y2)} U sacar {(x1,y1),(x3,y3),...,(xn,yn)}
+                                                 else {(x1,y1)} U sacar {(x2,y2),...,(xn,yn)}
+esVacia {} = True
+esVacia {(x1,y1),(x2,y2),...,(xn,yn)} = False
+union {(xi1,yi1),...,(xin,yin)} {(xj1,yj1),...,(xjn,yjn)} = {(xi1,yi1),...,(xin,yin),(xj1,yj1),...,(xjn,yjn)}
+
+Ejercicio 9)
+data AGTree a = Node a [AGTree a]
+
+Principio de inducción de AGTree a.
+
+-Pruebo por inducción en [AGTree a]
+Sea propiedad P(x) sobre AGTree a,
+Si vale P(t1),P(t2),..,P(tn) entonces vale P(Node x [t1,t2,..,tn]).
+
+Luego P(x) vale para todo x en AGTree a.
+
+Ejercicio 13)
+
+type Rank = Int
+data Heap a = E | N Rank a (Heap a) (Heap a)
+
+rank :: Heap a -> Rank
+rank E = 0
+rank (N r _ _ _) = r
+
+makeH :: a -> Heap a -> Heap a -> Heap a
+makeH x a b = let ra = rank a
+                  rb = rank b in
+                  if ra >= rb then N (rb + 1) x a b
+                              else N (ra + 1) x b a
+
+merge :: Ord a => Heap a -> Heap a -> Heap a
+merge h1 E = h1
+merge E h2 = h2
+merge h1@(N _ x a1 b1) h2@(N _ y a2 b2) = if x <= y then makeH x a1 (merge b1 h2)
+                                                    else makeH y a2 (merge h1 b2)
+
+Invariante leftist heap. El rango de caulquier hijo izquierdo
+es mayor o igual que el de su hermano de la derecha
+
+Sean l1, l2 heaps. Quiero demostrar:
+Si l1 y l2 son leftist heaps entonces merge l1 l2 es leftist heap
+
+(Hipótesis) l1 y l2 son leftist heaps. Sus sub-árboles también lo son por definición.
+Pruebo por inducción en l1:
+
+-)Caso base l1 = E
+    merge E l2 =(merge.2)= l2
+    Por hipótesis l2 es leftist heap.
+
+(HI1) Sea l1 = N k x a1 b1. a1 y b1 son leftist heaps porque l1 lo es.
+    *merge b1 l2 es un leftist heap.
+
+-)Caso inductivo l1 = N k x a1 b1
+    merge l1@(N k x a1 b1) l2
+    {Procedo por inducción en l2}
+
+    =)Caso base l2 = E
+        merge l1 E =(merge.1)= l1
+        Por hipótesis l1 es leftist heap.
+
+    (HI2) Sea l2 = N r y a2 b2. a2 y b2 son leftist heaps porque l2 lo es.
+        *merge l1 b2 es un leftist heap.
+
+    =)Caso inductivo l2 = N r y a2 b2
+        merge l1@(N k x a1 b1) l2@(N k' y a2 b2)
+        =(merge.3)=
+        if x <= y then makeH x a1 (merge b1 l2)
+                  else makeH y a2 (merge l1 b2)
+        =(Hay 2 casos)=
+
+        1. x <= y
+            =(x<=y evalúa True)=
+            makeH x a1 (merge b1 l2)
+            =(Por HI1, merge b1 l2 = l3 es leftist heap)=
+            makeH x a1 l3
+            Por Lema1, makeH devuelve leftist heap.
+        2. x > y
+            =(x<=y evalúa False)=
+            makeH y a2 (merge l1 b2)
+            =(Por HI2, merge b1 l2 = l4 es leftist heap)=
+            makeH y a2 l4
+            Por Lema1, makeH devuelve leftist heap.
+    
+    =) Para todo l2 leftist heap, merge l1 l2 es leftist heap.
+-) Para todo l1 leftist heap, merge l1 l2 es leftist heap.
+Queda demostradoo lo que queríamos.
+
+---------------------------------------------
+Lema1: Si h1 y h2 son leftist heap y x elemento cualquiera, entonces makeH x h1 h2 es leftist heap
+
+(Hipótesis) h1 y h2 son leftist heaps. Sus sub-árboles también lo son por definición.
+
+makeH x h1 h2
+=(ra = rank h1, rb = rank h2)=
+if ra >= rb then N (rb + 1) x a b
+            else N (ra + 1) x b a
+
+    (Caso 1) ra >= rb
+        =(ra >= rb = True)=
+        N (rb + 1) x h1 h2
+        Como ra >= rb -> rank h1 >= rank h2 -> N (rb + 1) x h1 h2 es leftist heap porque h1 y h2 lo son. (H)
+
+    (Caso 2) ra < rb
+        =(ra >= rb = False)=
+        N (ra + 1) x h2 h1
+        Como rb > ra -> rank h2 > rank h1 -> N (ra + 1) x h2 h1 es leftist heap porque h1 y h2 los son. (H)
+
+Luego se cumple el Lema1.
