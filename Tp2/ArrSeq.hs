@@ -1,5 +1,4 @@
 import qualified Arr as A
-import Arr (!)
 import Par
 
 data TreeView a t = EMPTY | ELT a | NODE t t
@@ -17,7 +16,7 @@ lengthS    :: A.Arr a -> Int
 lengthS xs =  A.length xs
 
 nthS       :: A.Arr a -> Int -> a 
-nthS xs n = xs ! n
+nthS xs n = xs A.! n
 
 tabulateS  :: (Int -> a) -> Int -> A.Arr a
 tabulateS = A.tabulate
@@ -40,10 +39,10 @@ appendS xs ys = let n = lengthS xs
                     in tabulateS (\ i -> if i < n then nthS xs i else nthS ys (i-n)) (n + m) 
 
 takeS      :: A.Arr a -> Int -> A.Arr a
-takeS xs i = A.subArray 0 i xs
+takeS xs i = let n = lengthS xs in if n <= i then xs else A.subArray 0 i xs
 
 dropS      :: A.Arr a -> Int -> A.Arr a
-dropS xs i = A.subArray i ((lengthS xs) - i) xs
+dropS xs i = let n = lengthS xs in if n <=i then emptyS else A.subArray i ((lengthS xs) - i) xs
 
 showtS     :: A.Arr a -> TreeView a (A.Arr a)
 showtS x = let n = lengthS x in case n of
