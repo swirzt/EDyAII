@@ -1,86 +1,111 @@
 import Par
+import Seq
 
-emptyS :: [a]
-emptyS = []
+emptyList :: [a]
+emptyList = []
 
-singletonS :: a -> [a]
-singletonS x = [x]
+singletonList :: a -> [a]
+singletonList x = [x]
 
-lenghtS :: [a] -> Int
-lenghtS [] = 0
-lenghtS (_:xs) = 1 + lenghtS xs
+lengthList :: [a] -> Int
+lengthList [] = 0
+lengthList (_:xs) = 1 + lengthList xs
 
-nthS :: [a] -> Int -> a
-nthS (x:_) 0 = x
-nthS (_:xs) n = nthS xs (n-1)
+nthList :: [a] -> Int -> a
+nthList (x:_) 0 = x
+nthList (_:xs) n = nthList xs (n-1)
 
-tabulateS  :: (Int -> a) -> Int -> [a]
-tabulateS _ 0 = []
-tabulateS f k = tabulateS' f 0 (k-1)
+tabulateList  :: (Int -> a) -> Int -> [a]
+tabulateList _ 0 = []
+tabulateList f k = tabulateList' f 0 (k-1)
 
-tabulateS' :: (Int -> a) -> Int -> Int -> [a]
-tabulateS' f x k = if x == k then [f x] else let (y,ys) = f x ||| (tabulateS' f (x+1) k) in y:ys
+tabulateList' :: (Int -> a) -> Int -> Int -> [a]
+tabulateList' f x k = if x == k then [f x] else let (y,ys) = f x ||| (tabulateList' f (x+1) k) in y:ys
 
-mapS :: (a -> b) -> [a] -> [b]
-mapS f [] = []
-mapS f (x:xs) = let (y,ys) = f x ||| mapS f xs in y : ys
+mapList :: (a -> b) -> [a] -> [b]
+mapList f [] = []
+mapList f (x:xs) = let (y,ys) = f x ||| mapList f xs in y : ys
 
-filterS :: (a -> Bool) -> [a] -> [a]
-filterS _ [] = []
-filterS f (x:xs) = let (y,ys) = f x ||| filterS f xs
+filterList :: (a -> Bool) -> [a] -> [a]
+filterList _ [] = []
+filterList f (x:xs) = let (y,ys) = f x ||| filterList f xs
                         in if y then x : ys
                                 else ys
 
--- ¿Cual es la profundidad esperada?
-appendS :: [a] -> [a] -> [a]
-appendS [] y = y
-appendS (x:xs) y = x : appendS xs y
+appendList :: [a] -> [a] -> [a]
+appendList [] y = y
+appendList (x:xs) y = x : appendList xs y
 
+takeList :: [a] -> Int -> [a]
+takeList _ 0 = []
+takeList [] _ = []
+takeList (x:xs) n = x : takeList xs (n-1)
 
-takeS :: [a] -> Int -> [a]
-takeS _ 0 = []
-takeS [] _ = []
-takeS (x:xs) n = x : takeS xs (n-1)
+dropList :: [a] -> Int -> [a]
+dropList x 0 = x
+dropList [] _ = []
+dropList (_:xs) n = dropList xs (n-1)
 
-dropS :: [a] -> Int -> [a]
-dropS x 0 = x
-dropS [] _ = []
-dropS (_:xs) n = dropS xs (n-1)
-
-showtS :: [a] -> TreeView a [a]
-showtS [] = EMPTY
-showtS [x] = ELT x
-showtS xs = let n = lenghtS xs
-                m = div n 2
-                (xss,yss) = takeS xs m ||| dropS xs m
+showtList :: [a] -> TreeView a [a]
+showtList [] = EMPTY
+showtList [x] = ELT x
+showtList xs = let n = lengthList xs
+                   m = div n 2
+                   (xss,yss) = takeList xs m ||| dropList xs m
                 in NODE xss yss
 
+showlList :: [a] -> ListView a ([a])
+showlList [] = NIL
+showlList (x:xs) = CONS x xs 
 
-showlS :: [a] -> ListView a ([a])
-showlS [] = NIL
-showlS (x:xs) = CONS x xs 
+joinList :: [[a]] -> [a]
+joinList [] = []
+joinList [x] = x
+joinList (x:y:xs) = let (xss,yss) = appendList x y ||| joinList xs in appendList xss yss
 
--- ¿Cual deberia ser el span de la funcion?
-joinS :: [[a]] -> [a]
-joinS [] = []
-joinS [x] = x
-joinS (x:y:xs) = let (xss,yss) = appendS x y ||| joinS xs in appendS xss yss
+contract :: (a -> a -> a) ->[a] -> [a]
+contract _ [] = []
+contract _ u@[x] = u
+contract f (x:y:xs) = let (ys,yss) = f x y ||| contract f xs in ys : yss
 
-reduceS    :: (a -> a -> a) -> a -> [a] -> a
-reduceS f e xs = let t = showtS xs in case t of 
-                                      EMPTY     -> e
-                                      ELT x     -> x
-                                      NODE l r -> f (reduceS f e l) (reduceS f e r)
+reduceList :: (a -> a -> a) -> a ->[a] -> a
+reduceList _ e [] = e
+reduceList _ _ [x] = x
+reduceList f e xs = let ys = contract f xs in reduceList f e ys
 
--- + [1,2,3,4,5,6,7] = (((1+2) + (3+4)) + (5+6)) + 7 <=> ((1+2) + (3+4)) + (5 + (6+7))         
-data TreeView a t = EMPTY | ELT a | NODE t t
-            deriving Show
-data ListView a t = NIL | CONS a t
-            deriving Show
--- + [1,2,3,4] = + [1+2,3+4] = + [(1+2)+(3+4)] = (1+2) + (3+4)
--- Fijate que onda el scan, deberia ser como el reduce pero con bigote. Esta en las diapositivas
--- Trucazo: Hay una relacion entre la asociatividad del scan y del reduce salite de aca, va a quedar lineal y el maximo de un logaritmo
+scanList :: (a -> a -> a) -> a -> [a] -> ([a],a)
+scanList _ e [] = ([],e)
+scanList f e [x] = ([e],f e x)
+scanList f e xs = let s = contract f xs
+                      s' = scanList f e s
+                        in expand f xs s' 0
 
+expand :: (a->a->a) -> [a] -> ([a],a) -> Int -> ([a],a)
+expand _ [] (_,yss) _ = ([],yss)
+expand _ [_] t _ = t 
+expand f l@(x:_:xss) t@((y:ys),yss) n = if even n then let (zs,z) = expand f l t (n+1) in (y:zs,z)
+                                                  else let (zs,z) = expand f xss (ys,yss) (n+1) 
+                                                           k = f y x
+                                                           in (k:zs,z)
 
-fromList :: [a] -> [a]
-fromList x = x
+fromListList :: [a] -> [a]
+fromListList x = x
+
+instance Seq [] where
+   emptyS = emptyList
+   singletonS = singletonList
+   lengthS = lengthList
+   nthS = nthList 
+   tabulateS = tabulateList
+   mapS = mapList
+   filterS = filterList
+   appendS = appendList
+   takeS = takeS
+   dropS = dropList
+   showtS = showtList
+   showlS = showlList
+   joinS = joinList
+   reduceS = reduceList
+   scanS = scanList
+   fromList = fromListList
+

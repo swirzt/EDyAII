@@ -1,76 +1,114 @@
 import qualified Arr as A
 import Par
+import Arr ((!))
+import Seq
 
-data TreeView a t = EMPTY | ELT a | NODE t t
-            deriving Show
-data ListView a t = NIL | CONS a t
-            deriving Show
+emptyArr :: A.Arr a
+emptyArr = A.empty
 
-emptyS :: A.Arr a
-emptyS = A.empty
+singletonArr :: a -> A.Arr a
+singletonArr x = A.fromList [x]
 
-singletonS :: a -> A.Arr a
-singletonS x = A.fromList [x]
+lengthArr    :: A.Arr a -> Int
+lengthArr xs =  A.length xs
 
-lengthS    :: A.Arr a -> Int
-lengthS xs =  A.length xs
+isEmptyArr :: A.Arr a -> Bool
+isEmptyArr xs = lengthArr xs == 0 
 
-nthS       :: A.Arr a -> Int -> a 
-nthS xs n = xs A.! n
+nthArr       :: A.Arr a -> Int -> a 
+nthArr xs n = xs ! n
 
-tabulateS  :: (Int -> a) -> Int -> A.Arr a
-tabulateS = A.tabulate
+tabulateArr  :: (Int -> a) -> Int -> A.Arr a
+tabulateArr = A.tabulate
 
-mapS       :: (a -> b) -> A.Arr a -> A.Arr b
-mapS f xs = tabulateS (\ i -> f (nthS xs i)) (lengthS xs)
+mapArr       :: (a -> b) -> A.Arr a -> A.Arr b
+mapArr f xs = tabulateArr (\ i -> f (nthArr xs i)) (lengthArr xs)
 
-filterS    :: (a -> Bool) -> A.Arr a -> A.Arr a 
-filterS f x = let n = lengthS x in case n of 
-                                     0         -> emptyS    
-                                     1         -> if f (nthS x 0) then x else emptyS  
+filterArr    :: (a -> Bool) -> A.Arr a -> A.Arr a 
+filterArr f x = let n = lengthArr x in case n of 
+                                     0         -> emptyArr    
+                                     1         -> if f (nthArr x 0) then x else emptyArr  
                                      otherwise -> let   m = div n 2
-                                                        (xs,ys) = filterS f (takeS x m) ||| filterS f (dropS x m)
-                                                  in appendS xs ys
+                                                        (xs,ys) = filterArr f (takeArr x m) ||| filterArr f (dropArr x m)
+                                                  in appendArr xs ys
 
+appendArr    :: A.Arr a -> A.Arr a -> A.Arr a
+appendArr xs ys = let n = lengthArr xs 
+                      m = lengthArr ys
+                  in tabulateArr (\ i -> if i < n then nthArr xs i else nthArr ys (i-n)) (n + m) 
 
-appendS    :: A.Arr a -> A.Arr a -> A.Arr a
-appendS xs ys = let n = lengthS xs 
-                    m = lengthS ys
-                    in tabulateS (\ i -> if i < n then nthS xs i else nthS ys (i-n)) (n + m) 
+takeArr      :: A.Arr a -> Int -> A.Arr a
+takeArr xs i = let n = lengthArr xs in if n <= i then xs else A.subArray 0 i xs
 
-takeS      :: A.Arr a -> Int -> A.Arr a
-takeS xs i = let n = lengthS xs in if n <= i then xs else A.subArray 0 i xs
+dropArr      :: A.Arr a -> Int -> A.Arr a
+dropArr xs i = let n = lengthArr xs in if n <=i then emptyArr else A.subArray i ((lengthArr xs) - i) xs
 
-dropS      :: A.Arr a -> Int -> A.Arr a
-dropS xs i = let n = lengthS xs in if n <=i then emptyS else A.subArray i ((lengthS xs) - i) xs
-
-showtS     :: A.Arr a -> TreeView a (A.Arr a)
-showtS x = let n = lengthS x in case n of
+showtArr     :: A.Arr a -> TreeView a (A.Arr a)
+showtArr x = let n = lengthArr x in case n of
                                 0         -> EMPTY
-                                1         -> ELT (nthS x 0)
+                                1         -> ELT (nthArr x 0)
                                 otherwise ->let m = div n 2   
-                                                (xs,ys) = takeS x m ||| dropS x m
+                                                (xs,ys) = takeArr x m ||| dropArr x m
                                                 in NODE xs ys
 
-showlS     :: A.Arr a -> ListView a (A.Arr a)
-showlS x = let n = lengthS x in case n of
+showlArr     :: A.Arr a -> ListView a (A.Arr a)
+showlArr x = let n = lengthArr x in case n of
                                0          -> NIL
-                               otherwise  -> let (xs,ys) = nthS x 0 ||| dropS x 1 in CONS xs ys
+                               otherwise  -> let (xs,ys) = nthArr x 0 ||| dropArr x 1 in CONS xs ys
 
-joinS      :: A.Arr (A.Arr a) -> A.Arr a
-joinS xss = let n = lengthS xss in case n of
-                                    0         -> emptyS
-                                    1         -> nthS xss 0
-                                    2         -> appendS (nthS xss 0) (nthS xss 1)
+joinArr      :: A.Arr (A.Arr a) -> A.Arr a
+joinArr xss = let n = lengthArr xss in case n of
+                                    0         -> emptyArr
+                                    1         -> nthArr xss 0
+                                    2         -> appendArr (nthArr xss 0) (nthArr xss 1)
                                     otherwise -> let m = div n 2
-                                                     (ys1,ys2) = joinS (takeS xss m) ||| joinS (dropS xss m)
-                                                     in appendS ys1 ys2 
+                                                     (ys1,ys2) = joinArr (takeArr xss m) ||| joinArr (dropArr xss m)
+                                                     in appendArr ys1 ys2 
 
-reduceS    :: (a -> a -> a) -> a -> A.Arr a -> a
-reduceS f e xs = let t = showtS xs in case t of 
-                                      EMPTY     -> e
-                                      ELT x     -> x
-                                      NODE l r -> f (reduceS f e l) (reduceS f e r)
+contractArr :: (a -> a -> a) -> A.Arr a -> A.Arr a
+contractArr f xs = let n = lengthArr xs
+                       k = div n 2
+                       h i = f (nthArr xs (2*i)) (nthArr xs (2*i+1))
+                        in if even n then tabulateArr (\i-> h i) k
+                                 else tabulateArr (\i-> if i == k then nthArr xs (2*i) else h i) (k+1)
 
-fromListS   :: [a] -> A.Arr a
-fromListS = A.fromList
+reduceArr :: (a -> a -> a) -> a -> A.Arr a -> a
+reduceArr f e xs = case lengthArr xs of
+                                  0 -> e
+                                  1 -> nthArr xs 0
+                                  otherwise -> let ys = contractArr f xs in reduceArr f e ys
+
+expandArr :: (a->a->a) -> A.Arr a -> (A.Arr a, a) -> (A.Arr a, a)  
+expandArr f xs (ys,y) = let n = lengthArr xs
+                              in (tabulateArr (combinArr) n, y) 
+                                     where combinArr i = if even i then (nthArr ys (div i 2)) 
+                                                                     else f (nthArr ys (div i 2)) (nthArr xs (i-1))
+
+scanArr ::(a->a->a) -> a -> A.Arr a -> (A.Arr a, a)
+scanArr f e xs = case lengthArr xs of
+                               0 -> (emptyArr,e)
+                               1 -> (singletonArr e, f e (nthArr xs 0))
+                               otherwise -> let s = contractArr f xs 
+                                                s' = scanArr f e s
+                                            in expandArr f xs s'
+
+fromListArr   :: [a] -> A.Arr a
+fromListArr = A.fromList
+
+instance Seq A.Arr where
+   emptyS = emptyArr
+   singletonS = singletonArr
+   lengthS = lengthArr
+   nthS = nthArr 
+   tabulateS = tabulateArr
+   mapS = mapArr
+   filterS = filterArr
+   appendS = appendArr
+   takeS = takeArr
+   dropS = dropArr
+   showtS = showtArr
+   showlS = showlArr
+   joinS = joinArr
+   reduceS = reduceArr
+   scanS = scanArr
+   fromList = fromListArr
