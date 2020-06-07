@@ -10,13 +10,10 @@ singletonArr :: a -> A.Arr a
 singletonArr x = A.fromList [x]
 
 lengthArr    :: A.Arr a -> Int
-lengthArr xs =  A.length xs
-
-isEmptyArr :: A.Arr a -> Bool
-isEmptyArr xs = lengthArr xs == 0 
+lengthArr = A.length
 
 nthArr       :: A.Arr a -> Int -> a 
-nthArr xs n = xs ! n
+nthArr = (!)
 
 tabulateArr  :: (Int -> a) -> Int -> A.Arr a
 tabulateArr = A.tabulate
@@ -57,20 +54,14 @@ showlArr x = let n = lengthArr x in case n of
                                otherwise  -> let (xs,ys) = nthArr x 0 ||| dropArr x 1 in CONS xs ys
 
 joinArr      :: A.Arr (A.Arr a) -> A.Arr a
-joinArr xss = let n = lengthArr xss in case n of
-                                    0         -> emptyArr
-                                    1         -> nthArr xss 0
-                                    2         -> appendArr (nthArr xss 0) (nthArr xss 1)
-                                    otherwise -> let m = div n 2
-                                                     (ys1,ys2) = joinArr (takeArr xss m) ||| joinArr (dropArr xss m)
-                                                     in appendArr ys1 ys2 
+joinArr = reduceArr (appendArr) emptyArr
 
 contractArr :: (a -> a -> a) -> A.Arr a -> A.Arr a
 contractArr f xs = let n = lengthArr xs
                        k = div n 2
                        h i = f (nthArr xs (2*i)) (nthArr xs (2*i+1))
                         in if even n then tabulateArr (\i-> h i) k
-                                 else tabulateArr (\i-> if i == k then nthArr xs (2*i) else h i) (k+1)
+                                     else tabulateArr (\i-> if i == k then nthArr xs (2*i) else h i) (k+1)
 
 reduceArr :: (a -> a -> a) -> a -> A.Arr a -> a
 reduceArr f e xs = case lengthArr xs of

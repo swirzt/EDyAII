@@ -8,8 +8,9 @@ singletonList :: a -> [a]
 singletonList x = [x]
 
 lengthList :: [a] -> Int
-lengthList [] = 0
-lengthList (_:xs) = 1 + lengthList xs
+lengthList xs = ll xs 0
+            where ll [] n = n
+                  ll (_:ys) n = ll ys (n+1)
 
 nthList :: [a] -> Int -> a
 nthList (x:_) 0 = x
@@ -59,9 +60,7 @@ showlList [] = NIL
 showlList (x:xs) = CONS x xs 
 
 joinList :: [[a]] -> [a]
-joinList [] = []
-joinList [x] = x
-joinList (x:y:xs) = let (xss,yss) = appendList x y ||| joinList xs in appendList xss yss
+joinList = reduceList (appendList) []
 
 contract :: (a -> a -> a) ->[a] -> [a]
 contract _ [] = []
@@ -89,7 +88,7 @@ expand f l@(x:_:xss) t@((y:ys),yss) n = if even n then let (zs,z) = expand f l t
                                                            in (k:zs,z)
 
 fromListList :: [a] -> [a]
-fromListList x = x
+fromListList = id
 
 instance Seq [] where
    emptyS = emptyList
