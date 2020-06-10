@@ -2,6 +2,7 @@ import qualified Arr as A
 import Par
 import Arr ((!))
 import Seq
+import TestTree
 
 emptyArr :: A.Arr a
 emptyArr = A.empty
@@ -48,13 +49,13 @@ showtArr x = let n = lengthArr x in case n of
                                                 (xs,ys) = takeArr x m ||| dropArr x m
                                                 in NODE xs ys
 
-showlArr     :: A.Arr a -> ListView a (A.Arr a)
+showlArr :: A.Arr a -> ListView a (A.Arr a)
 showlArr x = let n = lengthArr x in case n of
                                0          -> NIL
                                otherwise  -> let (xs,ys) = nthArr x 0 ||| dropArr x 1 in CONS xs ys
 
-joinArr      :: A.Arr (A.Arr a) -> A.Arr a
-joinArr = reduceArr (appendArr) emptyArr
+joinArr :: A.Arr (A.Arr a) -> A.Arr a
+joinArr = A.flatten
 
 contractArr :: (a -> a -> a) -> A.Arr a -> A.Arr a
 contractArr f xs = let n = lengthArr xs
@@ -72,10 +73,10 @@ reduceArr f e xs = case lengthArr xs of
 expandArr :: (a->a->a) -> A.Arr a -> (A.Arr a, a) -> (A.Arr a, a)  
 expandArr f xs (ys,y) = let n = lengthArr xs
                               in (tabulateArr (combinArr) n, y) 
-                                     where combinArr i = if even i then (nthArr ys (div i 2)) 
-                                                                     else f (nthArr ys (div i 2)) (nthArr xs (i-1))
+                                    where combinArr i = if even i then (nthArr ys (div i 2)) 
+                                                                  else f (nthArr ys (div i 2)) (nthArr xs (i-1))
 
-scanArr ::(a->a->a) -> a -> A.Arr a -> (A.Arr a, a)
+scanArr :: (a->a->a) -> a -> A.Arr a -> (A.Arr a, a)
 scanArr f e xs = case lengthArr xs of
                                0 -> (emptyArr,e)
                                1 -> (singletonArr e, f e (nthArr xs 0))
@@ -83,7 +84,7 @@ scanArr f e xs = case lengthArr xs of
                                                 s' = scanArr f e s
                                             in expandArr f xs s'
 
-fromListArr   :: [a] -> A.Arr a
+fromListArr :: [a] -> A.Arr a
 fromListArr = A.fromList
 
 instance Seq A.Arr where

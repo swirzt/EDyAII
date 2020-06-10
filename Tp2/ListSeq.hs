@@ -1,5 +1,6 @@
 import Par
 import Seq
+import TestTree
 
 emptyList :: [a]
 emptyList = []
@@ -55,7 +56,7 @@ showtList xs = let n = lengthList xs
                    (xss,yss) = takeList xs m ||| dropList xs m
                 in NODE xss yss
 
-showlList :: [a] -> ListView a ([a])
+showlList :: [a] -> ListView a [a]
 showlList [] = NIL
 showlList (x:xs) = CONS x xs 
 
@@ -76,16 +77,22 @@ scanList :: (a -> a -> a) -> a -> [a] -> ([a],a)
 scanList _ e [] = ([],e)
 scanList f e [x] = ([e],f e x)
 scanList f e xs = let s = contract f xs
-                      s' = scanList f e s
-                        in expand f xs s' 0
+                      (ys,y) = scanList f e s
+                      r = expand f xs ys
+                      in (r,y)
 
-expand :: (a->a->a) -> [a] -> ([a],a) -> Int -> ([a],a)
-expand _ [] (_,yss) _ = ([],yss)
-expand _ [_] t _ = t 
-expand f l@(x:_:xss) t@((y:ys),yss) n = if even n then let (zs,z) = expand f l t (n+1) in (y:zs,z)
-                                                  else let (zs,z) = expand f xss (ys,yss) (n+1) 
-                                                           k = f y x
-                                                           in (k:zs,z)
+expand :: (a -> a -> a) -> [a] -> [a] -> [a]
+expand _ [] _ = []
+expand _ [_] ys = ys
+expand f xs@(x:_:xss) ys@(y:yss) = y : (f y x) : expand f xss yss
+
+-- expand :: (a->a->a) -> [a] -> ([a],a) -> Int -> ([a],a)
+-- expand _ [] (_,yss) _ = ([],yss)
+-- expand _ [_] t _ = t 
+-- expand f l@(x:_:xss) t@((y:ys),yss) n = if even n then let (zs,z) = expand f l t (n+1) in (y:zs,z)
+--                                                   else let (zs,z) = expand f xss (ys,yss) (n+1) 
+--                                                            k = f y x
+--                                                            in (k:zs,z)
 
 fromListList :: [a] -> [a]
 fromListList = id
