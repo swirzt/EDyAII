@@ -78,7 +78,7 @@ expandArr f xs (ys,y) = let n = lengthArr xs
 
 scanArr :: (a->a->a) -> a -> A.Arr a -> (A.Arr a, a)
 scanArr f e xs = case lengthArr xs of
-                               0 -> (emptyArr,e)
+                               0 -> (singletonArr e,e)
                                1 -> (singletonArr e, f e (nthArr xs 0))
                                otherwise -> let s = contractArr f xs 
                                                 s' = scanArr f e s

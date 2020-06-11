@@ -74,7 +74,7 @@ reduceList _ _ [x] = x
 reduceList f e xs = let ys = contract f xs in reduceList f e ys
 
 scanList :: (a -> a -> a) -> a -> [a] -> ([a],a)
-scanList _ e [] = ([],e)
+scanList _ e [] = ([e],e)
 scanList f e [x] = ([e],f e x)
 scanList f e xs = let s = contract f xs
                       (ys,y) = scanList f e s
