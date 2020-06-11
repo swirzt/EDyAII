@@ -70,19 +70,21 @@ reduceArr f e xs = case lengthArr xs of
                                   1 -> nthArr xs 0
                                   otherwise -> let ys = contractArr f xs in reduceArr f e ys
 
-expandArr :: (a->a->a) -> A.Arr a -> (A.Arr a, a) -> (A.Arr a, a)  
-expandArr f xs (ys,y) = let n = lengthArr xs
-                              in (tabulateArr (combinArr) n, y) 
-                                    where combinArr i = if even i then (nthArr ys (div i 2)) 
-                                                                  else f (nthArr ys (div i 2)) (nthArr xs (i-1))
+expandArr :: (a->a->a) -> A.Arr a -> A.Arr a -> A.Arr a
+expandArr f xs ys = let n = lengthArr xs
+                        combinArr i = if even i then (nthArr ys (div i 2)) 
+                                                else f (nthArr ys (div i 2)) (nthArr xs (i-1))
+                        in tabulateArr (combinArr) n
 
 scanArr :: (a->a->a) -> a -> A.Arr a -> (A.Arr a, a)
 scanArr f e xs = case lengthArr xs of
                                0 -> (singletonArr e,e)
                                1 -> (singletonArr e, f e (nthArr xs 0))
                                otherwise -> let s = contractArr f xs 
-                                                s' = scanArr f e s
-                                            in expandArr f xs s'
+                                                (ys,y) = scanArr f e s
+                                                rs = expandArr f xs ys
+                                            in (rs,y)
+
 
 fromListArr :: [a] -> A.Arr a
 fromListArr = A.fromList
