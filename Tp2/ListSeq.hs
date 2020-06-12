@@ -1,6 +1,5 @@
 import Par
 import Seq
-import TestTree
 
 emptyList :: [a]
 emptyList = []
