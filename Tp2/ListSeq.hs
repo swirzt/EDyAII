@@ -84,15 +84,7 @@ scanList f e xs = let s = contract f xs
 expand :: (a -> a -> a) -> [a] -> [a] -> [a]
 expand _ [] _ = []
 expand _ [_] ys = ys
-expand f xs@(x:_:xss) ys@(y:yss) = y : (f y x) : expand f xss yss
-
--- expand :: (a->a->a) -> [a] -> ([a],a) -> Int -> ([a],a)
--- expand _ [] (_,yss) _ = ([],yss)
--- expand _ [_] t _ = t 
--- expand f l@(x:_:xss) t@((y:ys),yss) n = if even n then let (zs,z) = expand f l t (n+1) in (y:zs,z)
---                                                   else let (zs,z) = expand f xss (ys,yss) (n+1) 
---                                                            k = f y x
---                                                            in (k:zs,z)
+expand f xs@(x:_:xss) ys@(y:yss) = let (xy,r) = f y x ||| expand f xss yss in y : xy : r
 
 fromListList :: [a] -> [a]
 fromListList = id
