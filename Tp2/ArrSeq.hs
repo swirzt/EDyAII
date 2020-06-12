@@ -2,6 +2,7 @@ import qualified Arr as A
 import Par
 import Arr ((!))
 import Seq
+import TestTree
 
 emptyArr :: A.Arr a
 emptyArr = A.empty
@@ -66,7 +67,7 @@ contractArr f xs = let n = lengthArr xs
 reduceArr :: (a -> a -> a) -> a -> A.Arr a -> a
 reduceArr f e xs = case lengthArr xs of
                                   0 -> e
-                                  1 -> nthArr xs 0
+                                  1 -> f e (nthArr xs 0)
                                   otherwise -> let ys = contractArr f xs in reduceArr f e ys
 
 expandArr :: (a->a->a) -> A.Arr a -> A.Arr a -> A.Arr a

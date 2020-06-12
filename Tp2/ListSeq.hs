@@ -69,7 +69,7 @@ contract f (x:y:xs) = let (ys,yss) = f x y ||| contract f xs in ys : yss
 
 reduceList :: (a -> a -> a) -> a ->[a] -> a
 reduceList _ e [] = e
-reduceList _ _ [x] = x
+reduceList _ _ [x] = f e x
 reduceList f e xs = let ys = contract f xs in reduceList f e ys
 
 scanList :: (a -> a -> a) -> a -> [a] -> ([a],a)
@@ -97,7 +97,7 @@ instance Seq [] where
    mapS = mapList
    filterS = filterList
    appendS = appendList
-   takeS = takeS
+   takeS = takeList
    dropS = dropList
    showtS = showtList
    showlS = showlList
