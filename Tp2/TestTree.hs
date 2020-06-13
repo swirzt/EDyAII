@@ -1,5 +1,7 @@
 module TestTree where
 
+-- Utilizado para revisar el cerrado de parentesis en scan y reduce
+
 data Tree a = E | Leaf a | Join (Tree a) (Tree a)
 
 joinT :: Tree a -> Tree a -> Tree a

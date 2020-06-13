@@ -2,7 +2,6 @@ import qualified Arr as A
 import Par
 import Arr ((!))
 import Seq
-import TestTree
 
 emptyArr :: A.Arr a
 emptyArr = A.empty
