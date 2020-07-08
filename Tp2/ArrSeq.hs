@@ -1,3 +1,4 @@
+module ArrSeq where
 import qualified Arr as A
 import Par
 import Arr ((!))
