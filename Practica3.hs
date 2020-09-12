@@ -61,7 +61,7 @@ delHeadCL :: CList a -> CList a
 delHeadCL (CUnit _) = EmptyCL
 delHeadCL (Consnoc x y z) = case y of 
                             EmptyCL -> CUnit z
-                            CUnit y' -> Consnoc y' EmptyCL z
+                            -- CUnit y' -> Consnoc y' EmptyCL z
                             otherwise -> Consnoc (headCL y) (tailCL y) z
 
 isEmptyCL :: CList a -> Bool
@@ -225,13 +225,14 @@ insert x t = makeBlack (ins x t)
 -- 10) 
 type Rank = Int
 data Heap a = EmptyH | N Rank a (Heap a) (Heap a)
+            deriving Show
 
 rank :: Heap a -> Rank
 rank EmptyH = 0
 rank (N r _ _ _) = r
 
-makeH x a b = if rank a > rank b then N (rank b + 1) x a b
-                                 else N (rank a + 1) x b a
+makeH x a b = if rank a >= rank b then N (rank b + 1) x a b
+                                  else N (rank a + 1) x b a
 
 merge :: Ord a => Heap a -> Heap a -> Heap a
 merge h1 EmptyH = h1
@@ -239,4 +240,30 @@ merge EmptyH h2 = h2
 merge h1@(N _ x a1 b1) h2@(N _ y a2 b2) = if x <= y then makeH x a1 (merge b1 h2)
                                                     else makeH y a2 (merge h1 b2)
 
-fromList :: [a] -> Heap a
+toHeap :: a -> Heap a
+toHeap x = N 1 x EmptyH EmptyH
+
+mapreduce :: (a -> b) -> (b -> b -> b) -> [a] -> [b]
+mapreduce _ _ [] = []
+mapreduce f _ [x] = [f x]
+mapreduce f g (x:y:xs) = g (f x) (f y) : mapreduce f g xs
+
+reduce :: (a -> a -> a) -> [a] -> [a]
+reduce f (x:y:xs) = f x y : reduce f xs
+reduce _ xs = xs
+
+fromList :: Ord a => [a] -> Heap a
+fromList [] = EmptyH
+fromList [x] = toHeap x
+fromList xs = let ys = mapreduce (toHeap) (merge) xs in fromList' ys
+
+fromList' :: Ord a => [Heap a] -> Heap a
+fromList' [x] = x
+fromList' xs = let ys = reduce (merge) xs in fromList' ys
+
+-- -- solucion aldana (creo que la mía es más eficiente)
+-- fromList :: Ord a => [a] -> Heap a
+-- fromList [] = EmptyH
+-- fromList [x] = N 1 x EmptyH EmptyH
+-- fromList (x:y:zs) = if (x <= y) then merge (N 1 x (N 1 y EmptyH EmptyH) EmptyH) (fromList zs)
+--                                 else merge (N 1 y (N 1 x EmptyH EmptyH) EmptyH) (fromList zs)
